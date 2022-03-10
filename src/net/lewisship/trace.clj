@@ -13,14 +13,14 @@
 ; limitations under the License.
 
 (ns net.lewisship.trace
-  "Light-weight, asynchronous logging built around tap>.
+  "Light-weight, asynchronous logging built around `clojure.core/tap>`.
 
-  Follows the same pattern as clojure.core/assert: When tracing is not compiled,
+  Follows the same pattern as `clojure.core/assert`: When tracing is not compiled,
   the tracing macros should create no runtime overhead.
 
   When tracing is compiled, a check occurs to see if tracing is enabled; only then
   do the most expensive operations (e.g., identifying the function containing the
-  trace call) occur, as well as the call to clojure.core/tap>."
+  trace call) occur, as well as the call to `clojure.core/tap>`."
   (:require [io.aviso.exception :refer [demangle]]
             [clojure.string :as string]
             [clojure.pprint :refer [pprint]]))
@@ -88,14 +88,12 @@
   The map includes keys:
 
   * :in - a symbol of the namespace and function
-
   * :line - the line number of the trace invocation (if available)
-
   * :thread - the string name of the current thread
 
   Additional keys and values may be supplied.
 
-  trace expand to nil, if compilation is disabled.
+  `trace` expands to nil, if compilation is disabled.
 
   Any invocation of trace evaluates to nil."
   [& kvs]

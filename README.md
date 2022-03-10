@@ -1,11 +1,18 @@
 # io.github.hlship/trace
 
-Another small library, this one helps with REPL and output based debugging.
+[![Clojars Project](https://img.shields.io/clojars/v/io.github.hlship/trace.svg)](https://clojars.org/io.github.hlship/trace)
+
+[API Documentation](https://hlship.github.io/docs/trace/)
+
+Another small library, this one improves the experience when using output to debug code using the REPL.
+
+In my experience, using `prn` to output debugging information works well enough in small cases, 
+but doesn't scale when there is a lot of data to be printed, or a lot of threads are involved.  
+It just becomes a jumble of output.
 
 `trace` is a macro that (when enabled), will use Clojure's `tap>` to (by default) output a pretty-printed map of data to the console.
 
-
-For example, using this function:
+For example, consider this Ring handler function:
 
 ```clojure
 (ns my.example.ring-handler
@@ -39,8 +46,9 @@ it can be assured that they will not be compiled.
 
 Further, when compiled, if `new.lewisship.trace/*enable-trace*` is false then the map is not created or provided to `tap>`.
 
-Outputting the map via `pprint` is merely the default operation; `tap>` provided to flexibily to replace or augment what
-happens when `trace` is called.
+Outputting the map via `pprint` is merely the default operation; `tap>` provides the flexibility to replace or augment what
+happens when `trace` is called.  For example, a tap could `dissoc` the :thread key before pretty-printing, if the thread
+name is not interesting.
 
 In addition, there are `trace>` and `trace>>` macros used in threaded expressions (using `->` and `->>`).
 
