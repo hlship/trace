@@ -105,7 +105,7 @@
 
 (defmacro trace>
   "A version of `trace` that works inside `->` thread expressions.  Within the
-  trace body, `%` is bound to the threaded value. When compilation is disabled,
+  `trace>` body, `%` is bound to the threaded value. When compilation is disabled,
   it simply evaluates to the threaded value."
   [value & kvs]
   (assert (even? (count kvs))
@@ -119,7 +119,7 @@
 
 (defmacro trace>>
   "A version of `trace` that works inside `->>` thread expressions.  Within the
-  trace body, `%` is bound to the threaded value.  When compilation is disabled,
+  `trace>>` body, `%` is bound to the threaded value.  When compilation is disabled,
   it simply evaluates to the threaded value."
   ;; This is tricky because the value comes at the end due to ->> so we have to
   ;; work harder (fortunately, at compile time) to separate the value expression
