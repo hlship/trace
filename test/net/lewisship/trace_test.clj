@@ -26,15 +26,17 @@
     (is (= nil
           (macroexpand-1 `(trace :foo 1 :bar 2))))))
 
+;; Because line numbers are embedded, any changes above this line may make the lines below fail.
+
 (deftest trace-with-compile-enabled
   (binding [*compile-trace* true]
-    (is (= '(net.lewisship.trace/emit-trace 18 :foo 1 :bar 2)
+    (is (= '(net.lewisship.trace/emit-trace 34 :foo 1 :bar 2)
           (macroexpand-1 '(net.lewisship.trace/trace :foo 1 :bar 2))))
 
-    (is (= '(clojure.core/let [% n] (net.lewisship.trace/emit-trace 21 :value % :foo 1) %)
+    (is (= '(clojure.core/let [% n] (net.lewisship.trace/emit-trace 37 :value % :foo 1) %)
           (macroexpand-1 '(net.lewisship.trace/trace> n :value % :foo 1))))
 
-    (is (= '(clojure.core/let [% n] (net.lewisship.trace/emit-trace 24 :value % :bar 2) %)
+    (is (= '(clojure.core/let [% n] (net.lewisship.trace/emit-trace 40 :value % :bar 2) %)
           (macroexpand-1 '(net.lewisship.trace/trace>> :value % :bar 2 n))))))
 
 (deftest emit-trace-expansion
