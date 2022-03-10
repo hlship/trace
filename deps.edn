@@ -12,4 +12,8 @@
   ; clj -T:build
   :build
   {:deps {io.github.hlship/build-tools {:git/tag "v0.3" :git/sha "1ca74c2"}}
-          :ns-default build}}}
+          :ns-default build}}
+
+ :codox/config
+ {:description "Utility to assist with REPL-oriented debugging"
+  :source-uri "https://github.com/hlship/trace/blob/master/{filepath}#L{line}"}}
