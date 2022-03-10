@@ -19,7 +19,7 @@ For example, consider this Ring handler function:
   (:require [net.lewisship.trace :refer [trace]]))
 
 (defn handle-request
-  [request]
+  [request] 
   (trace
     :method (:request-method request)
     :uri (:uri request))
@@ -44,7 +44,7 @@ Patterned after logging, `trace` calls may be compiled or not - when `net.lewiss
 (the default), the `trace` macro expands to nil.  This means it is safe to leave `trace` calls in production code if
 it can be assured that they will not be compiled.
 
-Further, when compiled, if `new.lewisship.trace/*enable-trace*` is false then the map is not created or provided to `tap>`.
+Further, when compiled, if `net.lewisship.trace/*enable-trace*` is false then the map is not created or provided to `tap>`.
 
 Outputting the map via `pprint` is merely the default operation; `tap>` provides the flexibility to replace or augment what
 happens when `trace` is called.  For example, a tap could `dissoc` the :thread key before pretty-printing, if the thread
