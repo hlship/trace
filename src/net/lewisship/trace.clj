@@ -61,7 +61,7 @@
 
   `trace` expands to nil, if compilation is disabled.
 
-  Any invocation of trace evaluates to nil."
+  Any invocation of `trace` evaluates to nil."
   [& kvs]
   (assert (even? (count kvs))
           "pass key/value pairs")
