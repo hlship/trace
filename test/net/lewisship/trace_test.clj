@@ -14,9 +14,10 @@
 
 (ns net.lewisship.trace-test
   (:require
-   [clojure.test :refer [deftest is]]
-   [net.lewisship.trace :as trace
-    :refer [trace trace> trace>> *compile-trace* *enable-trace*]]))
+    [clojure.test :refer [deftest is]]
+    [net.lewisship.trace :as t
+     :refer [trace trace> trace>> *compile-trace* *enable-trace*]]
+    [net.lewisship.trace.impl :as impl]))
 
 ;; Note: these tests may fail if executed from REPL (and trace compilation
 ;; is enabled).
@@ -30,37 +31,36 @@
 
 (deftest trace-with-compile-enabled
   (binding [*compile-trace* true]
-    (is (= '(net.lewisship.trace/emit-trace 34 :foo 1 :bar 2)
-          (macroexpand-1 '(net.lewisship.trace/trace :foo 1 :bar 2))))
+    (is (= `(impl/emit-trace *enable-trace* 35 :foo 1 :bar 2)
+           (macroexpand-1 '(trace :foo 1 :bar 2))))
 
-    (is (= '(clojure.core/let [% n] (net.lewisship.trace/emit-trace 37 :value % :foo 1) %)
-          (macroexpand-1 '(net.lewisship.trace/trace> n :value % :foo 1))))
+    (is (= `(let [~'% ~'n] (impl/emit-trace *enable-trace* 38 :value ~'% :foo 1) ~'%)
+           (macroexpand-1 '(trace> n :value % :foo 1))))
 
-    (is (= '(clojure.core/let [% n] (net.lewisship.trace/emit-trace 40 :value % :bar 2) %)
-          (macroexpand-1 '(net.lewisship.trace/trace>> :value % :bar 2 n))))))
+    (is (= `(let [~'% ~'n] (impl/emit-trace *enable-trace* 41 :value ~'% :bar 2) ~'%)
+           (macroexpand-1 '(trace>> :value % :bar 2 n))))))
 
 (deftest emit-trace-expansion
   (binding [*compile-trace* true]
-    (is (= '(clojure.core/when net.lewisship.trace/*enable-trace*
-              (clojure.core/tap>
-                (clojure.core/array-map
-                  :in (net.lewisship.trace/extract-in)
-                  :line 99
-                  :thread (.getName (java.lang.Thread/currentThread))
-                  :x 1
-                  :y 2))
+    (is (= `(when ~'flag?
+              (tap> (array-map
+                      :in (impl/extract-in)
+                      :line 99
+                      :thread (.getName (java.lang.Thread/currentThread))
+                      :x 1
+                      :y 2))
               nil)
-          (macroexpand-1 '(net.lewisship.trace/emit-trace 99 :x 1 :y 2))))
+           (macroexpand-1 '(impl/emit-trace flag? 99 :x 1 :y 2))))
 
-    (is (= '(clojure.core/when net.lewisship.trace/*enable-trace*
-              (clojure.core/tap>
-                (clojure.core/array-map
-                  :in (net.lewisship.trace/extract-in)
-                  :thread (.getName (java.lang.Thread/currentThread))
-                  :x 1
-                  :y 2))
+    ;; When line number is not known:
+    (is (= `(when ~'flag?
+              (tap> (array-map
+                      :in (impl/extract-in)
+                      :thread (.getName (java.lang.Thread/currentThread))
+                      :x 1
+                      :y 2))
               nil)
-          (macroexpand-1 '(net.lewisship.trace/emit-trace nil :x 1 :y 2))))))
+           (macroexpand-1 '(impl/emit-trace flag? nil :x 1 :y 2))))))
 
 ;; The rest are just experiments used to manually test the macro expansions.
 
@@ -84,7 +84,7 @@
 
 (defn calls-extract-in
   []
-  (trace/extract-in))
+  (impl/extract-in))
 
 (deftest identifies-trace-location
   (is (= 'net.lewisship.trace-test/calls-extract-in
@@ -97,30 +97,30 @@
   (calls-trace)
   ;; no output
 
-  (trace/setup-default)
+  (t/setup-default)
   ;; Reload this NS to test the remainder:
 
   (clojure.walk/macroexpand-all '(trace :msg "hello"))
 
-  (calls-trace) ; => nil
+  (calls-trace)                                             ; => nil
   ;; {:in net.lewisship.trace-test/calls-trace,
   ;;  :line 23,
   ;;  :thread "nREPL-session-e439a250-d27a-474b-a694-69a97dbe5572",
   ;;  :msg "called"}
 
-  (calls-trace>) ; => {:value 2, :after true }
+  (calls-trace>)                                            ; => {:value 2, :after true }
   ;; {:in net.lewisship.trace-test/calls-trace>,
   ;;  :line 25,
   ;;  :thread "nREPL-session-e439a250-d27a-474b-a694-69a97dbe5572",
   ;;  :data {:value 2},
   ;;  :label :post-inc}
 
-  (calls-trace>>) ; => ((1 2) (3 4) (5 6) (7 8) (9 10))
+  (calls-trace>>)                                           ; => ((1 2) (3 4) (5 6) (7 8) (9 10))
   ;; {:in net.lewisship.trace-test/calls-trace>>,
   ;;  :line 32,
   ;;  :thread "nREPL-session-e439a250-d27a-474b-a694-69a97dbe5572",
   ;;  :values (1 2 3 4 5 6 7 8 9 10),
   ;;  :label :post-inc}
 
-  (calls-extract-in)
+  (calls-extract-in)                                        ;; ==> net.lewisship.trace-test/calls-extract-in
   )
