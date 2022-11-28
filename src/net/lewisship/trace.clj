@@ -21,7 +21,7 @@
   When tracing is compiled, a check occurs to see if tracing is enabled; only then
   do the most expensive operations (e.g., identifying the function containing the
   trace call) occur, as well as the call to `clojure.core/tap>`."
-  (:require [net.lewisship.trace.impl :refer [emit-trace]]
+  (:require [net.lewisship.trace.impl :as impl :refer [emit-trace enabled?]]
             [clojure.pprint :refer [pprint]]))
 
 (def ^:dynamic *compile-trace*
@@ -44,7 +44,11 @@
 (defn set-enable-trace!
   "Sets the default value of the `*enable-trace*` var.
 
-  Changes take effect immediately."
+  Changes take effect immediately.
+
+  When this global flag is true, tracing is enabled for all namespaces.
+  When this flag is false, tracing is only enabled for namespaces specifically enabled via
+  [[set-ns-override!]]."
   [value]
   (alter-var-root #'*enable-trace* (constantly value)))
 
@@ -66,8 +70,10 @@
   (assert (even? (count kvs))
           "pass key/value pairs")
   (when *compile-trace*
-    (let [{:keys [line]} (meta &form)]
-      `(emit-trace *enable-trace* ~line ~@kvs))))
+    (let [ns-symbol (ns-name *ns*)
+          {:keys [line]} (meta &form)]
+      `(when (enabled? *enable-trace* '~ns-symbol)
+         (emit-trace ~line ~@kvs)))))
 
 (defmacro trace>
   "A version of `trace` that works inside `->` thread expressions.  Within the
@@ -78,9 +84,11 @@
           "pass key/value pairs")
   (if-not *compile-trace*
     value
-    (let [{:keys [line]} (meta &form)]
+    (let [ns-symbol (ns-name *ns*)
+          {:keys [line]} (meta &form)]
       `(let [~'% ~value]
-         (emit-trace *enable-trace* ~line ~@kvs)
+         (when (enabled? *enable-trace* '~ns-symbol)
+           (emit-trace ~line ~@kvs))
          ~'%))))
 
 (defmacro trace>>
@@ -97,9 +105,11 @@
             "pass key/value pairs")
     (if-not *compile-trace*
       value
-      (let [{:keys [line]} (meta &form)]
+      (let [ns-symbol (ns-name *ns*)
+            {:keys [line]} (meta &form)]
         `(let [~'% ~value]
-           (emit-trace *enable-trace* ~line ~@kvs)
+           (when (enabled? *enable-trace* '~ns-symbol)
+             (emit-trace ~line ~@kvs))
            ~'%)))))
 
 (defn setup-default
@@ -108,3 +118,18 @@
   (set-compile-trace! true)
   (set-enable-trace! true)
   (add-tap pprint))
+
+(defn set-ns-override!
+  "Enables or disables tracing for a single namespace (by default, the current namespace).
+  The namespace must be a simple symbol.  Enabling tracing for a namespace overrides the
+  global flag managed by [[set-enable-trace!]] (tracing occurs if either the global flag
+  is true, or the namespace is specifically enabled).
+
+  Manages a set of namespaces that are enabled in this way."
+  {:added "1.1"}
+  ([]
+   (set-ns-override! true))
+  ([enabled?]
+   (set-ns-override! (ns-name *ns*) enabled?))
+  ([ns-symbol enabled?]
+   (impl/set-ns-enabled! ns-symbol enabled?)))

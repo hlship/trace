@@ -16,6 +16,20 @@
   (:require [io.aviso.exception :refer [demangle]]
             [clojure.string :as string]))
 
+(def *enabled-namespaces (atom #{}))
+
+(defn set-ns-enabled!
+  [ns-symbol flag]
+  {:pre [(simple-symbol? ns-symbol)]}
+  (let [op (if flag conj disj)]
+    (swap! *enabled-namespaces op ns-symbol))
+  nil)
+
+(defn enabled?
+  [global-flag current-ns]
+  (or global-flag
+      (contains? @*enabled-namespaces (ns-name current-ns))))
+
 (defn ^:private extract-fn-name
   [class-name]
   (let [[ns-id & raw-function-ids] (string/split class-name #"\$")
@@ -39,9 +53,9 @@
     (extract-fn-name (.getClassName ^StackTraceElement stack-frame))))
 
 (defmacro emit-trace
-  [enabled? trace-line & kvs]
+  [trace-line & kvs]
   ;; Maps are expected to be small; array-map ensures that the keys are in insertion order.
-  `(when ~enabled?
+  `(do
      (tap> (array-map
              :in (extract-in)
              ~@(when trace-line [:line trace-line])

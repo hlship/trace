@@ -52,3 +52,7 @@ name is not interesting.
 
 In addition, there are `trace>` and `trace>>` macros used in threaded expressions (using `->` and `->>`).
 
+## Per-Namespace Override
+
+`net.lewisship.trace/set-ns-override!` can be used to enable specific namespaces to be traced
+even when the global trace flag (via `set-enable-trace!`) is set to false.

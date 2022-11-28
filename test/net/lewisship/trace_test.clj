@@ -17,6 +17,7 @@
     [clojure.test :refer [deftest is]]
     [net.lewisship.trace :as t
      :refer [trace trace> trace>> *compile-trace* *enable-trace*]]
+    [net.lewisship.target :as target]
     [net.lewisship.trace.impl :as impl]))
 
 ;; Note: these tests may fail if executed from REPL (and trace compilation
@@ -30,6 +31,8 @@
 ;; Because line numbers are embedded, any changes above this line may make the lines below fail.
 
 ;; Disabled tests because work in Cursive but not from CLI.  Macros are tricky.
+
+;; These are now further out of date due to changes related to set-ns-override!
 
 #_
 (deftest trace-with-compile-enabled
@@ -96,6 +99,7 @@
 
 (comment
 
+  (set! *print-meta* true)
   ;; Rest of this is very tricky to automated test due to dynamic nature of the macros.
 
   (calls-trace)
@@ -113,12 +117,19 @@
   ;;  :thread "nREPL-session-e439a250-d27a-474b-a694-69a97dbe5572",
   ;;  :msg "called"}
 
+  (t/set-ns-override!)
+  (t/set-enable-trace! false)
+
+  (calls-trace)                                             ; => nil
+
+
   (calls-trace>)                                            ; => {:value 2, :after true }
   ;; {:in net.lewisship.trace-test/calls-trace>,
   ;;  :line 25,
   ;;  :thread "nREPL-session-e439a250-d27a-474b-a694-69a97dbe5572",
   ;;  :data {:value 2},
   ;;  :label :post-inc}
+  (macroexpand-1 '(trace> :value :foo :bar))
 
   (calls-trace>>)                                           ; => ((1 2) (3 4) (5 6) (7 8) (9 10))
   ;; {:in net.lewisship.trace-test/calls-trace>>,
@@ -126,6 +137,9 @@
   ;;  :thread "nREPL-session-e439a250-d27a-474b-a694-69a97dbe5572",
   ;;  :values (1 2 3 4 5 6 7 8 9 10),
   ;;  :label :post-inc}
+  (macroexpand-1 '(trace>> :foo :bar :value))
 
   (calls-extract-in)                                        ;; ==> net.lewisship.trace-test/calls-extract-in
+
+  (target/do-work)
   )
