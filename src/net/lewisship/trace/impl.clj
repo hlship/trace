@@ -13,7 +13,7 @@
 ; limitations under the License.
 
 (ns ^:no-doc net.lewisship.trace.impl
-  (:require [io.aviso.exception :refer [demangle]]
+  (:require [clj-commons.format.exceptions :refer [demangle]]
             [clojure.string :as string]))
 
 (def *enabled-namespaces (atom #{}))

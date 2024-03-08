@@ -1,8 +1,7 @@
 # io.github.hlship/trace
 
 [![Clojars Project](https://img.shields.io/clojars/v/io.github.hlship/trace.svg)](https://clojars.org/io.github.hlship/trace)
-
-[API Documentation](https://hlship.github.io/docs/trace/)
+[![cljdoc badge](https://cljdoc.org/badge/io.github.hlship/trace)](https://cljdoc.org/d/io.github.hlship/trace)
 
 Another small library, this one improves the experience when using output to debug code using the REPL.
 
@@ -56,3 +55,36 @@ In addition, there are `trace>` and `trace>>` macros used in threaded expression
 
 `net.lewisship.trace/set-ns-override!` can be used to enable specific namespaces to be traced
 even when the global trace flag (via `set-enable-trace!`) is set to false.
+
+## Benchmarking
+
+Since io.github.hlship/trace is used for testing, it now includes a wrapper aroud
+[Criterium](https://github.com/hugoduncan/criterium) to benchmark small snippets of code.
+
+The `net.lewisship.bench` namespace provides a simple `bench` macro.
+
+```
+(let [list-data   (doall (map inc (range 1000)))
+        vector-data (vec list-data)
+        pred        #(< 900 %)
+        v1          (fn [pred coll] (first (filter pred coll)))
+        v2          (fn [pred coll] (reduce (fn [_ v] (when (pred v)
+                                                        (reduced v)))
+                                            nil coll))]
+    (bench
+      (v1 pred list-data)
+      (v1 pred vector-data)
+      (v2 pred list-data)
+      (v2 pred vector-data)))
+           Expression |    Mean |        Var
+  (v1 pred list-data) | 7.76 µs | ± 76.66 ns
+(v1 pred vector-data) | 7.94 µs | ± 74.06 ns (slowest)
+  (v2 pred list-data) | 4.03 µs | ± 42.25 ns (fastest)
+(v2 pred vector-data) | 4.87 µs | ± 49.15 ns
+
+```
+
+The actual output uses some [ANSI fonts](https://github.com/clj-commons/pretty) to highlight the
+fastest and slowest expressions. The first argument to bench can be a map that provides options 
+for how to execute the benchmarks, and how to format the result.
+
