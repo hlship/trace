@@ -11,7 +11,7 @@
 
   ; clj -T:build
   :build
-  {:deps       {io.github.hlship/build-tools {:git/tag "v0.3" :git/sha "1ca74c2"}}
+  {:deps       {io.github.hlship/build-tools {:git/tag "0.10.1" :git/sha "7ecff5b"}}
    :ns-default build}}
 
  :codox/config
