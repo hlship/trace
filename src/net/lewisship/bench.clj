@@ -2,8 +2,7 @@
   "Useful wrappers around criterium."
   {:added "1.1.0"}
   (:require [criterium.core :as c]
-            [clj-commons.ansi :refer [pcompose]]))
-
+            [clj-commons.format.table :as table]))
 
 (defn- wrap-expr-as-block
   ;; blocks are what I call the inputs to criterium
@@ -12,7 +11,6 @@
   ([expr title]
    {:f           `(fn [] ~expr)
     :expr-string title}))
-
 
 (defn- format-estimate
   [estimate]
@@ -32,52 +30,52 @@
 
 (defn- report
   [sort? blocks results]
-  (let [lines       (mapv (fn [{:keys [expr-string]} {:keys [mean sample-variance]}]
-                            {:title              expr-string
-                             :mean               mean
-                             :formatted-mean     (format-estimate mean)
-                             :formatted-variance (str "± " (format-estimate-sqrt sample-variance))})
-                          blocks results)
-        lines'      (sort-by #(-> % :mean first) lines)
-        fastest     (first lines')
-        slowest     (last lines')
-        title-width (max 10 (col-width :title lines'))
-        mean-width  (max 4 (col-width :formatted-mean lines'))
-        var-width   (max 3 (col-width :formatted-variance lines'))]
-    (pcompose
-      [{:font  :bold
-        :width title-width} "Expression"]
-      " | "
-      [{:font  :bold
-        :width mean-width} "Mean"]
-      " | "
-      [{:font  :bold
-        :width var-width} "Var"])
-    (doseq [l (if sort? lines' lines)]
-      (pcompose
-        [{:font (cond
-                  sort? nil
+  (let [fastest-mean (->> results
+                          (map #(-> % :mean first))
+                          (reduce min))
+        lines        (mapv (fn [i {:keys [expr-string]} {:keys [mean sample-variance]}]
+                             (let [simple-mean (first mean)]
+                               {:expression         expr-string
+                                :mean               simple-mean
+                                :ratio              (format "%,.1f %%"
+                                                            (* 100.0 (/ simple-mean fastest-mean)))
+                                :row                i
+                                :formatted-mean     (format-estimate mean)
+                                :formatted-variance (str "± " (format-estimate-sqrt sample-variance))}))
+                           (iterate inc 0) blocks results)
+        lines'       (sort-by :mean lines)
+        decorate?    (not sort?)
+        fastest-row  (-> lines' first :row)
+        slowest-row  (-> lines' last :row)]
 
-                  (= l fastest)
-                  :bright-green.bold
-                  (= l slowest)
-                  :yellow)}
-         [{:width title-width}
-          (:title l)]
-         " | "
-         [{:width mean-width}
-          (:formatted-mean l)]
-         " | "
-         [{:width var-width}
-          (:formatted-variance l)]
-         (cond
-           sort? nil
+    (table/print-table
+      (cond-> {:columns
+               [:expression
+                {:key   :formatted-mean
+                 :title "Mean"}
+                {:key   :formatted-variance
+                 :title "Var"}
+                {:key :ratio
+                 :pad :left}]}
+        decorate? (assoc :default-decorator (fn [row _]
+                                              (cond
+                                                (= row fastest-row)
+                                                :bright-green.bold
 
-           (= l fastest)
-           " (fastest)"
+                                                (= row slowest-row)
+                                                :yellow))
+                         :row-annotator
+                         (fn [row _]
+                           (cond
+                             (= row fastest-row)
+                             [:bright-green.bold " (fastest)"]
 
-           (= l slowest)
-           " (slowest)")]))))
+
+                             (= row slowest-row)
+                             [:yellow " (slowest)"]))))
+      (if sort?
+        lines'
+        lines))))
 
 (defn- benchmark-block
   [options block]
@@ -85,7 +83,10 @@
   (c/benchmark* (:f block) options))
 
 (defn bench*
-  [opts & blocks]
+  "The core of the [[bench ]]macro; the expressions to `bench` are converted into blocks, each a map
+  with keys :f (a no-args function) and :expr-str (the string representation of the form being
+  benchmarked)."
+  [opts blocks]
   (let [{:keys [quick? progress? round-robin? report? sort?]
          :or   {quick?       true
                 round-robin? true
@@ -113,8 +114,8 @@
 
   Options:
   : :quick?  If true (the default), used quick benchmarking options
-  : :round-robin? If true (the default), used round-robin testing of the expressions rather
-    than running a benchmark for each expression.
+  : :round-robin? If true (the default), uses round-robin testing of the expressions rather
+    than running an independent benchmark for each expression.
   : report? If true (the default), print a report and return nil.  Otherwise,
     returns a seq of benchmarking stats as returned by Criterium.
   : progress? If true (the default is false), enable Criterium progress reporting during benchmark
@@ -126,14 +127,11 @@
   it uses when benchmarking, such as :samples, etc."
   [& exprs]
   (let [[expr & more-exprs] exprs
-        [opts all-exprs]
-        (if (map? expr)
-          [expr more-exprs]
-          [nil exprs])]
+        [opts all-exprs] (if (map? expr)
+                           [expr more-exprs]
+                           [nil exprs])]
     (assert (every? list? all-exprs)
             "Each benchmarked expression must be a list (a function call)")
     (assert (seq all-exprs)
             "No expressions to benchmark")
-    `(apply bench* ~opts
-            ~(mapv wrap-expr-as-block all-exprs))))
-
+    `(bench* ~opts ~(mapv wrap-expr-as-block all-exprs))))
