@@ -1,11 +1,23 @@
 (ns net.lewisship.bench-demo
-  (:require [clojure.string :as string]
-            [net.lewisship.bench :as bench]))
+  (:require [net.lewisship.bench :as bench :refer [bench]]))
 
 
 (comment
 
-  (bench/bench {:sort? true} (reduce + 0 (range 0 10000))
+  (let [list-data   (doall (map inc (range 1000)))
+        vector-data (vec list-data)
+        pred        #(< 900 %)
+        v1          (fn [pred coll] (first (filter pred coll)))
+        v2          (fn [pred coll] (reduce (fn [_ v] (when (pred v)
+                                                        (reduced v)))
+                                            nil coll))]
+    (bench
+      (v1 pred list-data)
+      (v1 pred vector-data)
+      (v2 pred list-data)
+      (v2 pred vector-data)))
+
+  (bench {:sort? true} (reduce + 0 (range 0 10000))
                (+ 1 3)
                (apply * (range 1 20))
                (mapv inc (range 0 1000)))

@@ -83,7 +83,10 @@
   (c/benchmark* (:f block) options))
 
 (defn bench*
-  [opts & blocks]
+  "The core of the [[bench ]]macro; the expressions to `bench` are converted into blocks, each a map
+  with keys :f (a no-args function) and :expr-str (the string representation of the form being
+  benchmarked)."
+  [opts blocks]
   (let [{:keys [quick? progress? round-robin? report? sort?]
          :or   {quick?       true
                 round-robin? true
@@ -111,8 +114,8 @@
 
   Options:
   : :quick?  If true (the default), used quick benchmarking options
-  : :round-robin? If true (the default), used round-robin testing of the expressions rather
-    than running a benchmark for each expression.
+  : :round-robin? If true (the default), uses round-robin testing of the expressions rather
+    than running an independent benchmark for each expression.
   : report? If true (the default), print a report and return nil.  Otherwise,
     returns a seq of benchmarking stats as returned by Criterium.
   : progress? If true (the default is false), enable Criterium progress reporting during benchmark
@@ -124,14 +127,11 @@
   it uses when benchmarking, such as :samples, etc."
   [& exprs]
   (let [[expr & more-exprs] exprs
-        [opts all-exprs]
-        (if (map? expr)
-          [expr more-exprs]
-          [nil exprs])]
+        [opts all-exprs] (if (map? expr)
+                           [expr more-exprs]
+                           [nil exprs])]
     (assert (every? list? all-exprs)
             "Each benchmarked expression must be a list (a function call)")
     (assert (seq all-exprs)
             "No expressions to benchmark")
-    `(apply bench* ~opts
-            ~(mapv wrap-expr-as-block all-exprs))))
-
+    `(bench* ~opts ~(mapv wrap-expr-as-block all-exprs))))

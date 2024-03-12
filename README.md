@@ -76,11 +76,14 @@ The `net.lewisship.bench` namespace provides a simple `bench` macro.
       (v1 pred vector-data)
       (v2 pred list-data)
       (v2 pred vector-data)))
-           Expression |    Mean |        Var
-  (v1 pred list-data) | 7.76 µs | ± 76.66 ns
-(v1 pred vector-data) | 7.94 µs | ± 74.06 ns (slowest)
-  (v2 pred list-data) | 4.03 µs | ± 42.25 ns (fastest)
-(v2 pred vector-data) | 4.87 µs | ± 49.15 ns
+┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━┓
+┃            Expression ┃     Mean ┃         Var ┃   Ratio ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━╋━━━━━━━━━━━━━╋━━━━━━━━━┫
+┃   (v1 pred list-data) ┃ 11.54 µs ┃ ± 122.15 ns ┃ 180.1 % ┃
+┃ (v1 pred vector-data) ┃ 11.62 µs ┃ ± 177.11 ns ┃ 181.3 % ┃ (slowest)
+┃   (v2 pred list-data) ┃  6.85 µs ┃  ± 68.80 ns ┃ 107.0 % ┃
+┃ (v2 pred vector-data) ┃  6.41 µs ┃ ± 191.67 ns ┃ 100.0 % ┃ (fastest)
+┗━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━┛
 
 ```
 
