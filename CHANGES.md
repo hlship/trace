@@ -1,4 +1,8 @@
-# 1.1 - UNRELEASED
+# 1.2 - UNRELEASED
+
+Added support for a tagged literal that traces a form to evaluate, and the result of the evaluation.
+
+# 1.1 - 8 Mar 2024
 
 Added the ability to enable tracing in specific namespaces even when the global tracing flag
 is false.

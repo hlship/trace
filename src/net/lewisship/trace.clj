@@ -112,6 +112,26 @@
              (emit-trace ~line ~@kvs))
            ~'%)))))
 
+
+(defn trace-result-reader
+  "A reader for the #trace/result tagged literal.  When compilation is off,
+  returns the form unchanged.  When compilation is enabled, it will trace
+  the form (as :form) and its evaluation (as :result), and evaluate
+  to the result."
+  {:added "1.2.0"}
+  [form]
+  (if-not *compile-trace*
+    form
+    (let [result (gensym "result-")
+          trace-call (with-meta
+                       `(trace :form '~form
+                               :result ~result)
+                       ;; Copy meta (line and location) so that trace can capture the line number
+                       (meta form))]
+      `(let [~result ~form]
+         ~trace-call
+         ~result))))
+
 (defn setup-default
   "Enables tracing output with a default tap of `pprint`."
   []
@@ -133,3 +153,4 @@
    (set-ns-override! (ns-name *ns*) enabled?))
   ([ns-symbol enabled?]
    (impl/set-ns-enabled! ns-symbol enabled?)))
+
