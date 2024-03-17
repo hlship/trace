@@ -56,9 +56,42 @@ In addition, there are `trace>` and `trace>>` macros used in threaded expression
 `net.lewisship.trace/set-ns-override!` can be used to enable specific namespaces to be traced
 even when the global trace flag (via `set-enable-trace!`) is set to false.
 
+## Tagged Literal
+
+Often, even using `trace` is a bit cumbersome; the #trace/result tagged literal precedes
+a form, and will `trace` the form and the result of evaluating the form, and evaluate to the result.
+
+Example:
+
+```
+(defn handle-request
+  [request]
+  (if (string/ends-with? #trace/result (:uri request) "/")
+    {:status 401
+     :body   "Invalid request"})
+  (handle-resource-request (:uri request)))
+
+> (handle-request {:request-method :get :uri "/status"})
+=> {:status 200 ...}
+{:in my.example.ring-handler/handle-request,
+:line 11,
+:thread "nREPL-session-62724fb3-7086-49bb-9d8f-4b238de8d01e",
+:form (:uri request),
+:result "/status"}
+```
+
+To enable this feature, create a `data_readers.clj` resource with the following value (or merge this entry into your existing `data_readers.clj`):
+
+```
+{trace/result net.lewisship.trace/trace-result-reader}
+```
+
+You must have the above file, or you'll see a RuntimeException "No reader function for tag trace/result" when
+you load your namespace with the #trace/result tag.
+
 ## Benchmarking
 
-Since io.github.hlship/trace is used for testing, it now includes a wrapper aroud
+Even though io.github.hlship/trace is used for REPL-oriented testing, it also includes a wrapper around
 [Criterium](https://github.com/hugoduncan/criterium) to benchmark small snippets of code.
 
 The `net.lewisship.bench` namespace provides a simple `bench` macro.
