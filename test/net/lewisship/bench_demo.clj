@@ -57,6 +57,17 @@
 
     )
 
+  (let [inputs {:list   (doall (map inc (range 1000)))
+                :vector (vec (doall (map inc (range 1000))))}
+        pred   (fn [value] #(< % value))
+        v1     (fn [pred coll] (first (filter pred coll)))
+        v2     (fn [pred coll] (reduce (fn [_ v] (when (pred v)
+                                                   (reduced v)))
+                                       nil coll))]
+    (bench-for [input [:list :vector]
+                count [5 50 500]]
+               (v1 (pred count) (input inputs))
+               (v2 (pred count) (input inputs))))
 
   (bench-for false)
   )
