@@ -194,5 +194,5 @@
                              ;; Evaluate symbol map inside the `for` context
                              ;; to map symbols to their values for the current
                              ;; iteration of the for.
-                             [~@expanded]))]
+                             ~expanded))]
        (bench* ~opts blocks#))))
