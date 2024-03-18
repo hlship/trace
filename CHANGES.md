@@ -1,4 +1,4 @@
-# 1.2 - UNRELEASED
+# 1.2 - 18 Mar 2024
 
 Added support for a tagged literal that traces a form to evaluate, and the result of the evaluation.
 
