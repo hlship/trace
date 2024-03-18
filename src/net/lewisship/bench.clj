@@ -1,7 +1,9 @@
 (ns net.lewisship.bench
   "Useful wrappers around criterium."
   {:added "1.1.0"}
-  (:require [criterium.core :as c]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.walk :as walk]
+            [criterium.core :as c]
             [clj-commons.format.table :as table]))
 
 (defn- wrap-expr-as-block
@@ -125,6 +127,8 @@
 
   In addition, the options are passed to Criterium, allowing overrides of the options
   it uses when benchmarking, such as :samples, etc."
+  {:arglists '([& exprs]
+               [opts & exprs])}
   [& exprs]
   (let [[expr & more-exprs] exprs
         [opts all-exprs] (if (map? expr)
@@ -135,3 +139,97 @@
     (assert (seq all-exprs)
             "No expressions to benchmark")
     `(bench* ~opts ~(mapv wrap-expr-as-block all-exprs))))
+
+(defn- form-expander
+  [symbols form]
+  `{:f           (fn [] ~form)
+    :expr-string (->> '~form
+                      (walk/postwalk-replace ~symbols)
+                      str)})
+
+(defn- symbol-map
+  [bindings]
+  ;; First pass: just handle simple bindings (:local-symbol) not any de-structuring
+  (reduce
+    (fn [symbols [local-symbol _]]
+      (assoc symbols (list 'quote local-symbol) local-symbol))
+    {}
+    (partition 2 bindings)))
+
+(s/def ::bind-for-args (s/cat
+                         :opts (s/? (s/nilable map?))
+                         :bindings vector?
+                         :exprs (s/+ list?)))
+
+(defmacro bench-for
+  "Often you will want to benchmark an expression (or set of expressions)
+  while varying the exact values inside the expression; `bench-for` takes
+  a vector of bindings, like `clojure.core/for` and builds a new list of
+  expressions for each iteration of the `for`.  Where possible, the
+  string version of the expression (used in the output report)
+  will have the local symbols from the `for` replaced with the values for this iteration.
+
+  Example:
+
+  ```
+  (let [coll (range 1000)]
+    (bench-for [n [5 50 500 5000]]
+      (reduce + (take n coll))))
+
+  ```
+
+  Will be reported as four expressions:
+
+  ```
+  (reduce + (take 5 coll))
+  (reduce + (take 50 coll))
+  (reduce + (take 500 coll))
+  (reduce + (take 5000 coll))
+  ```
+
+  Note that the expression is only modified for the string representation
+  used in the report; the actual expression is executed unchanged.
+
+  At this time, only the simplest bindings (local symbols, with no destructurings)
+  will be reported correctly (with symbols replaced with values)."
+  {:arglists '([bindings & exprs]
+               [opts bindings & exprs])}
+  [& args]
+  (let [{:keys [opts bindings exprs]} (s/conform ::bind-for-args args)
+        _ (when-not exprs
+            (throw (ex-info "bench-for expects optional opts, then vector, then expressions"
+                            {:args    args
+                             :explain (s/explain-data ::bind-for-args args)})))
+        symbols (gensym "symbols-")
+        symbol-map-ctor (symbol-map bindings)
+        expander (mapv #(form-expander symbols %) exprs)]
+    `(let [blocks# (reduce into []
+                           (for ~bindings
+                             ;; Evaluate symbol map inside the `for` context
+                             ;; to map symbols to their values for the current
+                             ;; iteration of the for.
+                             (let [~symbols ~symbol-map-ctor]
+                               ;; Each for iteration is one group of blocks
+                               ;; collected into blocks#
+                               [~@expander])))]
+       (bench* ~opts blocks#))))
+
+(comment
+  (macroexpand-1
+    '(bench-for [x (range 2)]
+                (+ x x)
+                (* x x)))
+
+  (bench-for {:progress? true}
+             [x (range 3)
+              y (range 0 x)]
+             (+ y x)
+             (* x y))
+
+  (let [coll (range 1000)]
+    (bench-for nil [n [5 50 500 5000]]
+               (reduce + (take n coll))))
+
+
+  (bench-for false)
+  )
