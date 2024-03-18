@@ -4,6 +4,7 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.walk :as walk]
             [criterium.core :as c]
+            [net.lewisship.bench.internal :as i]
             [clj-commons.format.table :as table]))
 
 (defn- wrap-expr-as-block
@@ -25,10 +26,6 @@
   (let [mean (Math/sqrt (first estimate))
         [scale unit] (c/scale-time mean)]
     (format "%.2f %s" (* scale mean) unit)))
-
-(defn- col-width
-  [k coll]
-  (reduce max (map #(-> % k count) coll)))
 
 (defn- report
   [sort? blocks results]
@@ -109,7 +106,7 @@
 
 (defmacro bench
   "Benchmarks a sequence of expressions. Criterium is used to perform the benchmarking,
-  then the results are reported in a tabular format, which the fastest and slowest
+  then the results are reported in a tabular format, with the fastest and slowest
   expressions highlighted (marked in green and yellow, respectively).
 
   The first argument may be a map of options, rather than an expression to benchmark.
@@ -147,15 +144,6 @@
                       (walk/postwalk-replace ~symbols)
                       str)})
 
-(defn- symbol-map
-  [bindings]
-  ;; First pass: just handle simple bindings (:local-symbol) not any de-structuring
-  (reduce
-    (fn [symbols [local-symbol _]]
-      (assoc symbols (list 'quote local-symbol) local-symbol))
-    {}
-    (partition 2 bindings)))
-
 (s/def ::bind-for-args (s/cat
                          :opts (s/? (s/nilable map?))
                          :bindings vector?
@@ -165,7 +153,7 @@
   "Often you will want to benchmark an expression (or set of expressions)
   while varying the exact values inside the expression; `bench-for` takes
   a vector of bindings, like `clojure.core/for` and builds a new list of
-  expressions for each iteration of the `for`.  Where possible, the
+  expressions for each iteration of the `for`.  The
   string version of the expression (used in the output report)
   will have the local symbols from the `for` replaced with the values for this iteration.
 
@@ -188,10 +176,7 @@
   ```
 
   Note that the expression is only modified for the string representation
-  used in the report; the actual expression is executed unchanged.
-
-  At this time, only the simplest bindings (local symbols, with no destructurings)
-  will be reported correctly (with symbols replaced with values)."
+  used in the report; the actual expression is executed unchanged."
   {:arglists '([bindings & exprs]
                [opts bindings & exprs])}
   [& args]
@@ -201,15 +186,13 @@
                             {:args    args
                              :explain (s/explain-data ::bind-for-args args)})))
         symbols (gensym "symbols-")
-        symbol-map-ctor (symbol-map bindings)
-        expander (mapv #(form-expander symbols %) exprs)]
+        expanded (mapv #(form-expander symbols %) exprs)
+        outer (-> &env keys set)]
     `(let [blocks# (reduce into []
-                           (for ~bindings
+                           (for [~@bindings
+                                 :let [~symbols (i/capture-symbols ~outer)]]
                              ;; Evaluate symbol map inside the `for` context
                              ;; to map symbols to their values for the current
                              ;; iteration of the for.
-                             (let [~symbols ~symbol-map-ctor]
-                               ;; Each for iteration is one group of blocks
-                               ;; collected into blocks#
-                               [~@expander])))]
+                             [~@expanded]))]
        (bench* ~opts blocks#))))
