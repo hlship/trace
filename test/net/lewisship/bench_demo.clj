@@ -1,5 +1,5 @@
 (ns net.lewisship.bench-demo
-  (:require [net.lewisship.bench :as bench :refer [bench]]))
+  (:require [net.lewisship.bench :as bench :refer [bench bench-for]]))
 
 
 (comment
@@ -39,4 +39,27 @@
       {:mean            [1.2077515200737978E-5 (1.1952211907913209E-5 1.2175522861268199E-5)],
        :sample-variance [2.3028652061321932E-14 (0.0 0.0)]}])
 
+
+  (comment
+    (macroexpand-1
+      '(bench-for [x (range 2)]
+                  (+ x x)
+                  (* x x)))
+
+    (bench-for {:progress? true}
+               [x (range 3)
+                y (range 0 x)]
+               (+ y x)
+               (* x y))
+
+    (let [coll (range 1000)]
+      (bench-for nil [n [5 50 500 5000]]
+                 (reduce + (take n coll))))
+
+
+    (bench-for false)
+    )
+
   )
+
+
