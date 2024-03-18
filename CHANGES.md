@@ -2,6 +2,8 @@
 
 Added support for a tagged literal that traces a form to evaluate, and the result of the evaluation.
 
+Added the `bench-for` macro.
+
 # 1.1 - 8 Mar 2024
 
 Added the ability to enable tracing in specific namespaces even when the global tracing flag
