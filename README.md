@@ -98,17 +98,17 @@ The `net.lewisship.bench` namespace provides a simple `bench` macro.
 
 ```
 (let [list-data   (doall (map inc (range 1000)))
-        vector-data (vec list-data)
-        pred        #(< 900 %)
-        v1          (fn [pred coll] (first (filter pred coll)))
-        v2          (fn [pred coll] (reduce (fn [_ v] (when (pred v)
-                                                        (reduced v)))
-                                            nil coll))]
-    (bench
-      (v1 pred list-data)
-      (v1 pred vector-data)
-      (v2 pred list-data)
-      (v2 pred vector-data)))
+      vector-data (vec list-data)
+      pred        #(< 900 %)
+      v1          (fn [pred coll] (first (filter pred coll)))
+      v2          (fn [pred coll] (reduce (fn [_ v] (when (pred v)
+                                                      (reduced v)))
+                                          nil coll))]
+  (bench
+    (v1 pred list-data)
+    (v1 pred vector-data)
+    (v2 pred list-data)
+    (v2 pred vector-data)))
 ┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━┓
 ┃            Expression ┃     Mean ┃         Var ┃   Ratio ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━╋━━━━━━━━━━━━━╋━━━━━━━━━┫
@@ -124,3 +124,40 @@ The actual output uses some [ANSI fonts](https://github.com/clj-commons/pretty) 
 fastest and slowest expressions. The first argument to bench can be a map that provides options 
 for how to execute the benchmarks, and how to format the result.
 
+The `bench-for` macro builds on this, using an implicit `for` to build the expressions;
+it does some re-writing of the expression that's reported in the table
+to capture the symbols provided by the `for` bindings:
+
+```
+(let [inputs {:list   (doall (map inc (range 1000)))
+                :vector (vec (doall (map inc (range 1000))))}
+      pred   (fn [value] #(< % value))
+      v1     (fn [pred coll] (first (filter pred coll)))
+      v2     (fn [pred coll] (reduce (fn [_ v] (when (pred v)
+                                                 (reduced v)))
+                                     nil coll))]
+  (bench-for [input [:list :vector]
+              count [5 50 500]]
+             (v1 (pred count) (input inputs))
+             (v2 (pred count) (input inputs))))
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃                       Expression ┃      Mean ┃       Var ┃     Ratio ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫
+┃     (v1 (pred 5) (:list inputs)) ┃ 459.03 ns ┃ ± 4.47 ns ┃ 1,353.9 % ┃
+┃     (v2 (pred 5) (:list inputs)) ┃  33.90 ns ┃ ± 1.27 ns ┃   100.0 % ┃ (fastest)
+┃    (v1 (pred 50) (:list inputs)) ┃  82.29 ns ┃ ± 1.67 ns ┃   242.7 % ┃
+┃    (v2 (pred 50) (:list inputs)) ┃ 500.76 ns ┃ ± 2.72 ns ┃ 1,477.0 % ┃
+┃   (v1 (pred 500) (:list inputs)) ┃ 473.59 ns ┃ ± 6.02 ns ┃ 1,396.9 % ┃
+┃   (v2 (pred 500) (:list inputs)) ┃  81.51 ns ┃ ± 1.40 ns ┃   240.4 % ┃
+┃   (v1 (pred 5) (:vector inputs)) ┃ 498.76 ns ┃ ± 7.44 ns ┃ 1,471.1 % ┃
+┃   (v2 (pred 5) (:vector inputs)) ┃  34.63 ns ┃ ± 0.77 ns ┃   102.1 % ┃
+┃  (v1 (pred 50) (:vector inputs)) ┃  34.43 ns ┃ ± 0.45 ns ┃   101.5 % ┃
+┃  (v2 (pred 50) (:vector inputs)) ┃  81.52 ns ┃ ± 1.58 ns ┃   240.4 % ┃
+┃ (v1 (pred 500) (:vector inputs)) ┃ 514.36 ns ┃ ± 4.27 ns ┃ 1,517.1 % ┃ (slowest)
+┃ (v2 (pred 500) (:vector inputs)) ┃ 512.08 ns ┃ ± 6.29 ns ┃ 1,510.4 % ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
+```
+
+Notice how the `input` and `count` symbols have been replaced with a specific value
+for that execution?  Be careful about using collections directly as inputs, as the (possibly infinite!)
+contents of those collections will be part of the expression.

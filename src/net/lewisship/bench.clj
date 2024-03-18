@@ -1,7 +1,10 @@
 (ns net.lewisship.bench
   "Useful wrappers around criterium."
   {:added "1.1.0"}
-  (:require [criterium.core :as c]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.walk :as walk]
+            [criterium.core :as c]
+            [net.lewisship.bench.internal :as i]
             [clj-commons.format.table :as table]))
 
 (defn- wrap-expr-as-block
@@ -23,10 +26,6 @@
   (let [mean (Math/sqrt (first estimate))
         [scale unit] (c/scale-time mean)]
     (format "%.2f %s" (* scale mean) unit)))
-
-(defn- col-width
-  [k coll]
-  (reduce max (map #(-> % k count) coll)))
 
 (defn- report
   [sort? blocks results]
@@ -107,7 +106,7 @@
 
 (defmacro bench
   "Benchmarks a sequence of expressions. Criterium is used to perform the benchmarking,
-  then the results are reported in a tabular format, which the fastest and slowest
+  then the results are reported in a tabular format, with the fastest and slowest
   expressions highlighted (marked in green and yellow, respectively).
 
   The first argument may be a map of options, rather than an expression to benchmark.
@@ -125,6 +124,8 @@
 
   In addition, the options are passed to Criterium, allowing overrides of the options
   it uses when benchmarking, such as :samples, etc."
+  {:arglists '([& exprs]
+               [opts & exprs])}
   [& exprs]
   (let [[expr & more-exprs] exprs
         [opts all-exprs] (if (map? expr)
@@ -135,3 +136,63 @@
     (assert (seq all-exprs)
             "No expressions to benchmark")
     `(bench* ~opts ~(mapv wrap-expr-as-block all-exprs))))
+
+(defn- form-expander
+  [symbols form]
+  `{:f           (fn [] ~form)
+    :expr-string (->> '~form
+                      (walk/postwalk-replace ~symbols)
+                      str)})
+
+(s/def ::bind-for-args (s/cat
+                         :opts (s/? (s/nilable map?))
+                         :bindings vector?
+                         :exprs (s/+ list?)))
+
+(defmacro bench-for
+  "Often you will want to benchmark an expression (or set of expressions)
+  while varying the exact values inside the expression; `bench-for` takes
+  a vector of bindings, like `clojure.core/for` and builds a new list of
+  expressions for each iteration of the `for`.  The
+  string version of the expression (used in the output report)
+  will have the local symbols from the `for` replaced with the values for this iteration.
+
+  Example:
+
+  ```
+  (let [coll (range 1000)]
+    (bench-for [n [5 50 500 5000]]
+      (reduce + (take n coll))))
+
+  ```
+
+  Will be reported as four expressions:
+
+  ```
+  (reduce + (take 5 coll))
+  (reduce + (take 50 coll))
+  (reduce + (take 500 coll))
+  (reduce + (take 5000 coll))
+  ```
+
+  Note that the expression is only modified for the string representation
+  used in the report; the actual expression is executed unchanged."
+  {:arglists '([bindings & exprs]
+               [opts bindings & exprs])}
+  [& args]
+  (let [{:keys [opts bindings exprs]} (s/conform ::bind-for-args args)
+        _ (when-not exprs
+            (throw (ex-info "bench-for expects optional opts, then vector, then expressions"
+                            {:args    args
+                             :explain (s/explain-data ::bind-for-args args)})))
+        symbols (gensym "symbols-")
+        expanded (mapv #(form-expander symbols %) exprs)
+        outer (-> &env keys set)]
+    `(let [blocks# (reduce into []
+                           (for [~@bindings
+                                 :let [~symbols (i/capture-symbols ~outer)]]
+                             ;; Evaluate symbol map inside the `for` context
+                             ;; to map symbols to their values for the current
+                             ;; iteration of the for.
+                             ~expanded))]
+       (bench* ~opts blocks#))))
