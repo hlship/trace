@@ -1,23 +1,23 @@
 {:deps {org.clojure/clojure    {:mvn/version "1.11.2"}
-        org.clj-commons/pretty {:mvn/version "2.3.0"}
+        org.clj-commons/pretty {:mvn/version "2.5.0"}
         criterium/criterium    {:mvn/version "0.4.6"}}
  :aliases
  {;; clj -X:test
   :test
   {:extra-paths ["test"
                  "test-resources"]
-   :extra-deps  {io.github.cognitect-labs/test-runner {:git/tag "v0.5.0"
-                                                       :git/sha "b3fd0d2"}}
+   :extra-deps  {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1"
+                                                       :git/sha "dfb30dd"}}
    :exec-fn     cognitect.test-runner.api/test}
 
   :nrepl
-  {:extra-deps {nrepl/nrepl {:mvn/version "1.1.0"}}
+  {:extra-deps {nrepl/nrepl {:mvn/version "1.1.1"}}
    :extra-paths ["test-resources"]
    :main-opts ["-m" "nrepl.cmdline"]}
 
   ; clj -T:build
   :build
-  {:deps       {io.github.hlship/build-tools {:git/tag "0.10.1" :git/sha "7ecff5b"}}
+  {:deps       {io.github.hlship/build-tools {:git/tag "0.10.2" :git/sha "3c446e4"}}
    :ns-default build}}
 
  :codox/config

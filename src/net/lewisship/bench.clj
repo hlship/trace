@@ -144,10 +144,10 @@
                       (walk/postwalk-replace ~symbols)
                       str)})
 
-(s/def ::bind-for-args (s/cat
-                         :opts (s/? (s/nilable map?))
-                         :bindings vector?
-                         :exprs (s/+ list?)))
+(s/def ::bench-for-args (s/cat
+                          :opts (s/? (s/nilable map?))
+                          :bindings vector?
+                          :exprs (s/+ list?)))
 
 (defmacro bench-for
   "Often you will want to benchmark an expression (or set of expressions)
@@ -180,11 +180,11 @@
   {:arglists '([bindings & exprs]
                [opts bindings & exprs])}
   [& args]
-  (let [{:keys [opts bindings exprs]} (s/conform ::bind-for-args args)
+  (let [{:keys [opts bindings exprs]} (s/conform ::bench-for-args args)
         _ (when-not exprs
             (throw (ex-info "bench-for expects optional opts, then vector, then expressions"
                             {:args    args
-                             :explain (s/explain-data ::bind-for-args args)})))
+                             :explain (s/explain-data ::bench-for-args args)})))
         symbols (gensym "symbols-")
         expanded (mapv #(form-expander symbols %) exprs)
         outer (-> &env keys set)]

@@ -1,3 +1,10 @@
+# 1.3 - UNRELEASED
+ 
+*Breaking Changes*
+
+- Slight change to bench output: column titles are now centered
+- The spec :net.lewisship.bench/:bind-for-args has been renamed to :bench-for-args; the previous name was incorrect
+
 # 1.2 - 18 Mar 2024
 
 Added support for a tagged literal that traces a form to evaluate, and the result of the evaluation.

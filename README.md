@@ -110,7 +110,7 @@ The `net.lewisship.bench` namespace provides a simple `bench` macro.
     (v2 pred list-data)
     (v2 pred vector-data)))
 ┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━┓
-┃            Expression ┃     Mean ┃         Var ┃   Ratio ┃
+┃       Expression      ┃   Mean   ┃     Var     ┃  Ratio  ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━╋━━━━━━━━━━━━━╋━━━━━━━━━┫
 ┃   (v1 pred list-data) ┃ 11.54 µs ┃ ± 122.15 ns ┃ 180.1 % ┃
 ┃ (v1 pred vector-data) ┃ 11.62 µs ┃ ± 177.11 ns ┃ 181.3 % ┃ (slowest)
@@ -126,7 +126,7 @@ for how to execute the benchmarks, and how to format the result.
 
 The `bench-for` macro builds on this, using an implicit `for` to build the expressions;
 it does some re-writing of the expression that's reported in the table
-to capture the symbols provided by the `for` bindings:
+to capture the values for the symbols provided by the `for` bindings:
 
 ```
 (let [inputs {:list   (doall (map inc (range 1000)))
@@ -140,22 +140,22 @@ to capture the symbols provided by the `for` bindings:
               count [5 50 500]]
              (v1 (pred count) (input inputs))
              (v2 (pred count) (input inputs))))
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
-┃                       Expression ┃      Mean ┃       Var ┃     Ratio ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫
-┃     (v1 (pred 5) (:list inputs)) ┃ 459.03 ns ┃ ± 4.47 ns ┃ 1,353.9 % ┃
-┃     (v2 (pred 5) (:list inputs)) ┃  33.90 ns ┃ ± 1.27 ns ┃   100.0 % ┃ (fastest)
-┃    (v1 (pred 50) (:list inputs)) ┃  82.29 ns ┃ ± 1.67 ns ┃   242.7 % ┃
-┃    (v2 (pred 50) (:list inputs)) ┃ 500.76 ns ┃ ± 2.72 ns ┃ 1,477.0 % ┃
-┃   (v1 (pred 500) (:list inputs)) ┃ 473.59 ns ┃ ± 6.02 ns ┃ 1,396.9 % ┃
-┃   (v2 (pred 500) (:list inputs)) ┃  81.51 ns ┃ ± 1.40 ns ┃   240.4 % ┃
-┃   (v1 (pred 5) (:vector inputs)) ┃ 498.76 ns ┃ ± 7.44 ns ┃ 1,471.1 % ┃
-┃   (v2 (pred 5) (:vector inputs)) ┃  34.63 ns ┃ ± 0.77 ns ┃   102.1 % ┃
-┃  (v1 (pred 50) (:vector inputs)) ┃  34.43 ns ┃ ± 0.45 ns ┃   101.5 % ┃
-┃  (v2 (pred 50) (:vector inputs)) ┃  81.52 ns ┃ ± 1.58 ns ┃   240.4 % ┃
-┃ (v1 (pred 500) (:vector inputs)) ┃ 514.36 ns ┃ ± 4.27 ns ┃ 1,517.1 % ┃ (slowest)
-┃ (v2 (pred 500) (:vector inputs)) ┃ 512.08 ns ┃ ± 6.29 ns ┃ 1,510.4 % ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃            Expression            ┃    Mean   ┃     Var    ┃   Ratio   ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━━╋━━━━━━━━━━━┫
+┃     (v1 (pred 5) (:list inputs)) ┃ 585.97 ns ┃ ± 23.97 ns ┃ 1,453.9 % ┃
+┃     (v2 (pred 5) (:list inputs)) ┃  41.35 ns ┃  ± 1.42 ns ┃   102.6 % ┃
+┃    (v1 (pred 50) (:list inputs)) ┃  96.78 ns ┃  ± 2.96 ns ┃   240.1 % ┃
+┃    (v2 (pred 50) (:list inputs)) ┃ 637.54 ns ┃ ± 26.65 ns ┃ 1,581.8 % ┃
+┃   (v1 (pred 500) (:list inputs)) ┃ 605.89 ns ┃ ± 14.26 ns ┃ 1,503.3 % ┃
+┃   (v2 (pred 500) (:list inputs)) ┃  97.41 ns ┃  ± 4.09 ns ┃   241.7 % ┃
+┃   (v1 (pred 5) (:vector inputs)) ┃ 656.54 ns ┃ ± 31.59 ns ┃ 1,628.9 % ┃
+┃   (v2 (pred 5) (:vector inputs)) ┃  41.81 ns ┃  ± 1.87 ns ┃   103.7 % ┃
+┃  (v1 (pred 50) (:vector inputs)) ┃  40.30 ns ┃  ± 1.40 ns ┃   100.0 % ┃ (fastest)
+┃  (v2 (pred 50) (:vector inputs)) ┃  96.49 ns ┃  ± 4.61 ns ┃   239.4 % ┃
+┃ (v1 (pred 500) (:vector inputs)) ┃ 657.34 ns ┃ ± 18.35 ns ┃ 1,630.9 % ┃ (slowest)
+┃ (v2 (pred 500) (:vector inputs)) ┃ 652.02 ns ┃ ± 12.11 ns ┃ 1,617.7 % ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━━┻━━━━━━━━━━━┛
 ```
 
 Notice how the `input` and `count` symbols have been replaced with a specific value
