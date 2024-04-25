@@ -1,5 +1,9 @@
 # 1.3 - UNRELEASED
- 
+
+The `bench` option :round-robin? now defaults to false, not true.
+
+Bumped org.clj-commons/pretty dependency to version 2.6.0.
+
 *Breaking Changes*
 
 - Slight change to bench output: column titles are now centered

@@ -1,4 +1,5 @@
 {:deps {org.clojure/clojure    {:mvn/version "1.11.2"}
+        org.clj-commons/pretty {:mvn/version "2.6.0"}
         org.clj-commons/pretty {:mvn/version "2.5.0"}
         criterium/criterium    {:mvn/version "0.4.6"}}
  :aliases
