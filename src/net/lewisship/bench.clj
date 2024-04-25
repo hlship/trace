@@ -82,7 +82,7 @@
   (c/benchmark* (:f block) options))
 
 (defn bench*
-  "The core of the [[bench ]]macro; the expressions to `bench` are converted into blocks, each a map
+  "The core of the [[bench]] macro; the expressions to `bench` are converted into blocks, each a map
   with keys :f (a no-args function) and :expr-str (the string representation of the form being
   benchmarked)."
   [opts blocks]
