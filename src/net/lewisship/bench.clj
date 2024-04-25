@@ -88,7 +88,7 @@
   [opts blocks]
   (let [{:keys [quick? progress? round-robin? report? sort?]
          :or   {quick?       true
-                round-robin? true
+                round-robin? false
                 report?      true
                 sort?        false
                 progress?    false}} opts
@@ -113,7 +113,7 @@
 
   Options:
   : :quick?  If true (the default), used quick benchmarking options
-  : :round-robin? If true (the default), uses round-robin testing of the expressions rather
+  : :round-robin? If true (the default is false), uses round-robin testing of the expressions rather
     than running an independent benchmark for each expression.
   : report? If true (the default), print a report and return nil.  Otherwise,
     returns a seq of benchmarking stats as returned by Criterium.
