@@ -112,10 +112,10 @@ The `net.lewisship.bench` namespace provides a simple `bench` macro.
 ┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━┓
 ┃       Expression      ┃   Mean   ┃     Var     ┃  Ratio  ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━╋━━━━━━━━━━━━━╋━━━━━━━━━┫
-┃   (v1 pred list-data) ┃ 11.54 µs ┃ ± 122.15 ns ┃ 180.1 % ┃
-┃ (v1 pred vector-data) ┃ 11.62 µs ┃ ± 177.11 ns ┃ 181.3 % ┃ (slowest)
-┃   (v2 pred list-data) ┃  6.85 µs ┃  ± 68.80 ns ┃ 107.0 % ┃
-┃ (v2 pred vector-data) ┃  6.41 µs ┃ ± 191.67 ns ┃ 100.0 % ┃ (fastest)
+┃   (v1 pred list-data) ┃  8.80 µs ┃   ± 1.10 µs ┃ 152.3 % ┃
+┃ (v1 pred vector-data) ┃ 11.29 µs ┃   ± 1.24 µs ┃ 195.4 % ┃ (slowest)
+┃   (v2 pred list-data) ┃  6.37 µs ┃ ± 800.42 ns ┃ 110.3 % ┃
+┃ (v2 pred vector-data) ┃  5.78 µs ┃ ± 772.54 ns ┃ 100.0 % ┃ (fastest)
 ┗━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━┛
 
 ```
@@ -129,8 +129,8 @@ it does some re-writing of the expression that's reported in the table
 to capture the values for the symbols provided by the `for` bindings:
 
 ```
-(let [inputs {:list   (doall (map inc (range 1000)))
-                :vector (vec (doall (map inc (range 1000))))}
+(let [inputs {:list    (doall (map inc (range 1000)))
+               :vector (vec (doall (map inc (range 1000))))}
       pred   (fn [value] #(< % value))
       v1     (fn [pred coll] (first (filter pred coll)))
       v2     (fn [pred coll] (reduce (fn [_ v] (when (pred v)
@@ -143,18 +143,18 @@ to capture the values for the symbols provided by the `for` bindings:
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┓
 ┃            Expression            ┃    Mean   ┃     Var    ┃   Ratio   ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━━╋━━━━━━━━━━━┫
-┃     (v1 (pred 5) (:list inputs)) ┃ 585.97 ns ┃ ± 23.97 ns ┃ 1,453.9 % ┃
-┃     (v2 (pred 5) (:list inputs)) ┃  41.35 ns ┃  ± 1.42 ns ┃   102.6 % ┃
-┃    (v1 (pred 50) (:list inputs)) ┃  96.78 ns ┃  ± 2.96 ns ┃   240.1 % ┃
-┃    (v2 (pred 50) (:list inputs)) ┃ 637.54 ns ┃ ± 26.65 ns ┃ 1,581.8 % ┃
-┃   (v1 (pred 500) (:list inputs)) ┃ 605.89 ns ┃ ± 14.26 ns ┃ 1,503.3 % ┃
-┃   (v2 (pred 500) (:list inputs)) ┃  97.41 ns ┃  ± 4.09 ns ┃   241.7 % ┃
-┃   (v1 (pred 5) (:vector inputs)) ┃ 656.54 ns ┃ ± 31.59 ns ┃ 1,628.9 % ┃
-┃   (v2 (pred 5) (:vector inputs)) ┃  41.81 ns ┃  ± 1.87 ns ┃   103.7 % ┃
-┃  (v1 (pred 50) (:vector inputs)) ┃  40.30 ns ┃  ± 1.40 ns ┃   100.0 % ┃ (fastest)
-┃  (v2 (pred 50) (:vector inputs)) ┃  96.49 ns ┃  ± 4.61 ns ┃   239.4 % ┃
-┃ (v1 (pred 500) (:vector inputs)) ┃ 657.34 ns ┃ ± 18.35 ns ┃ 1,630.9 % ┃ (slowest)
-┃ (v2 (pred 500) (:vector inputs)) ┃ 652.02 ns ┃ ± 12.11 ns ┃ 1,617.7 % ┃
+┃     (v1 (pred 5) (:list inputs)) ┃ 283.33 ns ┃ ± 26.35 ns ┃ 1,550.5 % ┃
+┃     (v2 (pred 5) (:list inputs)) ┃  50.85 ns ┃  ± 1.45 ns ┃   278.3 % ┃
+┃    (v1 (pred 50) (:list inputs)) ┃ 455.43 ns ┃ ± 31.55 ns ┃ 2,492.3 % ┃
+┃    (v2 (pred 50) (:list inputs)) ┃  49.92 ns ┃  ± 6.45 ns ┃   273.2 % ┃
+┃   (v1 (pred 500) (:list inputs)) ┃ 456.72 ns ┃ ± 33.41 ns ┃ 2,499.4 % ┃
+┃   (v2 (pred 500) (:list inputs)) ┃  49.32 ns ┃  ± 6.82 ns ┃   269.9 % ┃
+┃   (v1 (pred 5) (:vector inputs)) ┃ 430.01 ns ┃ ± 37.79 ns ┃ 2,353.2 % ┃
+┃   (v2 (pred 5) (:vector inputs)) ┃  18.27 ns ┃  ± 0.44 ns ┃   100.0 % ┃ (fastest)
+┃  (v1 (pred 50) (:vector inputs)) ┃ 462.37 ns ┃ ± 37.89 ns ┃ 2,530.3 % ┃ (slowest)
+┃  (v2 (pred 50) (:vector inputs)) ┃  19.48 ns ┃  ± 2.32 ns ┃   106.6 % ┃
+┃ (v1 (pred 500) (:vector inputs)) ┃ 459.50 ns ┃ ± 34.11 ns ┃ 2,514.6 % ┃
+┃ (v2 (pred 500) (:vector inputs)) ┃  18.68 ns ┃  ± 0.57 ns ┃   102.2 % ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━━┻━━━━━━━━━━━┛
 ```
 
