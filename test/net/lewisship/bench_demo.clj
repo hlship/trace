@@ -25,7 +25,7 @@
   ;; This is where I confirmed that IntelliJ's console (not just Cursive's) doesn't handle
   ;; ANSI codes properly.  Fixed in pretty 3.2.0.
 
-  (#'bench/report false
+  (#'bench/report {:ratio? false :sort? true}
     [{:expr-string "first"}
      {:expr-string "second"}
      {:expr-string "third"}]

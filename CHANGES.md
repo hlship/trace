@@ -1,5 +1,7 @@
 # 1.4 - UNRELEASED
 
+Added new `bench` option: `:ratio?` (default true); when false, the ratio column is omitted.
+
 # 1.3 - 25 Apr 2024
 
 The `bench` option :round-robin? now defaults to false, not true.
