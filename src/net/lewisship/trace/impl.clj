@@ -13,7 +13,7 @@
 ; limitations under the License.
 
 (ns ^:no-doc net.lewisship.trace.impl
-  (:require [clj-commons.format.exceptions :refer [demangle]]
+  (:require [clj-commons.format.exceptions :refer [format-stack-trace-element]]
             [clojure.string :as string]))
 
 (def *enabled-namespaces (atom #{}))
@@ -30,27 +30,19 @@
   (or global-flag
       (contains? @*enabled-namespaces (ns-name current-ns))))
 
-(defn ^:private extract-fn-name
-  [class-name]
-  (let [[ns-id & raw-function-ids] (string/split class-name #"\$")
-        fn-name (->> raw-function-ids
-                     (map #(string/replace % #"__\d+" ""))
-                     (map demangle)
-                     (string/join "/"))]
-    (symbol (demangle ns-id) fn-name)))
-
 (defn ^:private in-trace-ns?
   [^StackTraceElement frame]
   (string/starts-with? (.getClassName frame) "net.lewisship.trace.impl$"))
 
 (defn extract-in
   []
-  (let [stack-frame (->> (Thread/currentThread)
+  (let [element (->> (Thread/currentThread)
                          .getStackTrace
                          (drop 1)                           ; Thread/getStackTrace
                          (drop-while in-trace-ns?)
-                         first)]
-    (extract-fn-name (.getClassName ^StackTraceElement stack-frame))))
+                         first)
+        frame-name (format-stack-trace-element element)]
+    (symbol frame-name)))
 
 (defmacro emit-trace
   [trace-line & kvs]
