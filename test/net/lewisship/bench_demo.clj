@@ -23,9 +23,9 @@
 
   ;; Fast experiment with the output side.
   ;; This is where I confirmed that IntelliJ's console (not just Cursive's) doesn't handle
-  ;; ANSI codes properly.
+  ;; ANSI codes properly.  Fixed in pretty 3.2.0.
 
-  (#'bench/report true
+  (#'bench/report false
     [{:expr-string "first"}
      {:expr-string "second"}
      {:expr-string "third"}]

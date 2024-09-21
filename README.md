@@ -160,4 +160,4 @@ to capture the values for the symbols provided by the `for` bindings:
 
 Notice how the `input` and `count` symbols have been replaced with a specific value
 for that execution?  Be careful about using collections directly as inputs, as the (possibly infinite!)
-contents of those collections will be part of the expression.
+contents of those collections will be part of the expression printed in the first column.
