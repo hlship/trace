@@ -3,7 +3,7 @@
             [clojure.tools.build.api :as build]))
 
 (def lib 'io.github.hlship/trace)
-(def version "1.3")
+(def version "1.4")
 
 (def jar-params {:project-name lib
                  :version version
@@ -22,7 +22,7 @@
 (defn deploy
   [_params]
   (clean nil)
-  (b/deploy-jar (assoc (jar nil) :sign-artifacts? false)))
+  (b/deploy-jar (jar nil)))
 
 (defn codox
   [_params]
