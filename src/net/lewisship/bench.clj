@@ -28,8 +28,11 @@
     (format "%.2f %s" (* scale mean) unit)))
 
 (defn- report
-  [sort? blocks results]
-  (let [fastest-mean (->> results
+  [opts blocks results]
+  (let [{:keys [sort? ratio?]
+         :or {sort? false
+              ratio? true}} opts
+        fastest-mean (->> results
                           (map #(-> % :mean first))
                           (reduce min))
         lines        (mapv (fn [i {:keys [expr-string]} {:keys [mean sample-variance]}]
@@ -49,13 +52,14 @@
 
     (table/print-table
       (cond-> {:columns
-               [:expression
-                {:key   :formatted-mean
-                 :title "Mean"}
-                {:key   :formatted-variance
-                 :title "Var"}
-                {:key :ratio
-                 :pad :left}]}
+               (cond-> [:expression
+                        {:key   :formatted-mean
+                         :title "Mean"}
+                        {:key   :formatted-variance
+                         :title "Var"
+                         :pad :left}]
+                 ratio? (conj {:key :ratio
+                               :pad :left}))}
         decorate? (assoc :default-decorator (fn [row _]
                                               (cond
                                                 (= row fastest-row)
@@ -86,11 +90,10 @@
   with keys :f (a no-args function) and :expr-str (the string representation of the form being
   benchmarked)."
   [opts blocks]
-  (let [{:keys [quick? progress? round-robin? report? sort?]
+  (let [{:keys [quick? progress? round-robin? report?]
          :or   {quick?       true
                 round-robin? false
                 report?      true
-                sort?        false
                 progress?    false}} opts
         benchmark-options (merge (if quick?
                                    c/*default-quick-bench-opts*
@@ -101,7 +104,7 @@
                               (c/benchmark-round-robin* blocks benchmark-options)
                               (mapv #(benchmark-block benchmark-options %) blocks)))]
     (if report?
-      (report sort? blocks results)
+      (report opts blocks results)
       results)))
 
 (defmacro bench
@@ -121,6 +124,7 @@
     collection.
   : sort? If true (the default is false), then when results are printed, they are
     sorted fastest to slowest (with no highlighting).
+  : ratio? If true (the default), then in the report, the final column is a ratio of the row to the fastest row.
 
   In addition, the options are passed to Criterium, allowing overrides of the options
   it uses when benchmarking, such as :samples, etc."
