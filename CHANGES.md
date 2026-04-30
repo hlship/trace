@@ -1,4 +1,4 @@
-# 1.4 - UNRELEASED
+# 1.4 - 21 Sep 2024
 
 Added new `bench` option: `:ratio?` (default true); when false, the ratio column is omitted.
 
