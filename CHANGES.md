@@ -1,4 +1,10 @@
-# 1.4 - UNRELEASED
+# 1.5 - UNRELEASED
+
+`setup-default` now taps through [puget](https://github.com/greglook/puget) via `pretty-print`,
+with color gated by `clj-commons.ansi/*color-enabled*`.
+
+# 1.4 - 21 Sep 2024
+
 
 Added new `bench` option: `:ratio?` (default true); when false, the ratio column is omitted.
 

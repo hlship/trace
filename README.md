@@ -9,7 +9,9 @@ In my experience, using `prn` to output debugging information works well enough 
 but doesn't scale when there is a lot of data to be printed, or a lot of threads are involved.  
 It just becomes a jumble of output.
 
-`trace` is a macro that (when enabled), will use Clojure's `tap>` to (by default) output a pretty-printed map of data to the console.
+`trace` is a macro that (when enabled), will use Clojure's `tap>` to (by default) output a
+[puget](https://github.com/greglook/puget)-pretty-printed map of data to the console
+(with color when `clj-commons.ansi/*color-enabled*` is true).
 
 For example, consider this Ring handler function:
 
@@ -45,7 +47,7 @@ it can be assured that they will not be compiled.
 
 Further, when compiled, if `net.lewisship.trace/*enable-trace*` is false then the map is not created or provided to `tap>`.
 
-Outputting the map via `pprint` is merely the default operation; `tap>` provides the flexibility to replace or augment what
+Outputting the map via puget is merely the default operation; `tap>` provides the flexibility to replace or augment what
 happens when `trace` is called.  For example, a tap could `dissoc` the :thread key before pretty-printing, if the thread
 name is not interesting.
 

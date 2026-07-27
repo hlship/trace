@@ -15,6 +15,8 @@
 (ns net.lewisship.trace-test
   (:require
     [clojure.test :refer [deftest is]]
+    [clojure.string :as str]
+    [clj-commons.ansi :as ansi]
     [net.lewisship.trace :as t
      :refer [trace trace> trace>> *compile-trace* *enable-trace*]]
     [net.lewisship.target :as target]
@@ -96,6 +98,18 @@
 (deftest identifies-trace-location
   (is (= 'net.lewisship.trace-test/calls-extract-in
         (calls-extract-in))))
+
+(deftest pretty-print-preserves-key-order-and-honors-color
+  (let [m (array-map :in 'foo/bar :line 6 :thread "t" :method :get)
+        capture (fn [color?]
+                  (with-out-str
+                    (binding [ansi/*color-enabled* color?]
+                      (t/pretty-print m))))
+        plain (capture false)
+        colored (capture true)]
+    (is (str/includes? plain ":in foo/bar, :line 6, :thread \"t\", :method :get"))
+    (is (not (str/includes? plain "\u001b[")))
+    (is (str/includes? colored "\u001b["))))
 
 (comment
 
