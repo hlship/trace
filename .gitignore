@@ -1,2 +1,6 @@
 /target/
 *.asc
+/.cpcache/
+!.clj-kondo/config.edn
+.clj-kondo/**
+*.iml

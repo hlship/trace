@@ -22,7 +22,8 @@
   do the most expensive operations (e.g., identifying the function containing the
   trace call) occur, as well as the call to `clojure.core/tap>`."
   (:require [net.lewisship.trace.impl :as impl :refer [emit-trace enabled?]]
-            [clojure.pprint :refer [pprint]]))
+            [clj-commons.ansi :as ansi]
+            [puget.printer :as puget]))
 
 (def ^:dynamic *compile-trace*
   "If false (the default), calls to `trace` evaluate to nil (and `trace>` and `trace>>` simply return
@@ -132,12 +133,22 @@
          ~trace-call
          ~result))))
 
+(defn pretty-print
+  "Pretty-prints a value using [puget](https://github.com/greglook/puget).
+
+  Uses color when [[clj-commons.ansi/*color-enabled*]] is true.
+  Preserves map key insertion order."
+  {:added "1.5"}
+  [value]
+  (puget/pprint value {:sort-keys false
+                       :print-color ansi/*color-enabled*}))
+
 (defn setup-default
-  "Enables tracing output with a default tap of `pprint`."
+  "Enables tracing output with a default tap of [[pretty-print]]."
   []
   (set-compile-trace! true)
   (set-enable-trace! true)
-  (add-tap pprint))
+  (add-tap pretty-print))
 
 (defn set-ns-override!
   "Enables or disables tracing for a single namespace (by default, the current namespace).
@@ -153,4 +164,3 @@
    (set-ns-override! (ns-name *ns*) enabled?))
   ([ns-symbol enabled?]
    (impl/set-ns-enabled! ns-symbol enabled?)))
-
