@@ -2,6 +2,7 @@
 
 `setup-default` now taps through [puget](https://github.com/greglook/puget) via `pretty-print`,
 with color gated by `clj-commons.ansi/*color-enabled*`.
+`pretty-print` writes to stderr (`*err*`), not stdout.
 
 # 1.4 - 21 Sep 2024
 
