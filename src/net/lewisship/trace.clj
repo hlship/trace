@@ -136,12 +136,14 @@
 (defn pretty-print
   "Pretty-prints a value using [puget](https://github.com/greglook/puget).
 
+  Writes to `*err*` (stderr), not `*out*`.
   Uses color when [[clj-commons.ansi/*color-enabled*]] is true.
   Preserves map key insertion order."
   {:added "1.5"}
   [value]
-  (puget/pprint value {:sort-keys false
-                       :print-color ansi/*color-enabled*}))
+  (binding [*out* *err*]
+    (puget/pprint value {:sort-keys false
+                         :print-color ansi/*color-enabled*})))
 
 (defn setup-default
   "Enables tracing output with a default tap of [[pretty-print]]."

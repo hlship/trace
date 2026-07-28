@@ -102,9 +102,11 @@
 (deftest pretty-print-preserves-key-order-and-honors-color
   (let [m (array-map :in 'foo/bar :line 6 :thread "t" :method :get)
         capture (fn [color?]
-                  (with-out-str
-                    (binding [ansi/*color-enabled* color?]
-                      (t/pretty-print m))))
+                  (let [sw (java.io.StringWriter.)]
+                    (binding [*err* sw
+                              ansi/*color-enabled* color?]
+                      (t/pretty-print m))
+                    (str sw)))
         plain (capture false)
         colored (capture true)]
     (is (str/includes? plain ":in foo/bar, :line 6, :thread \"t\", :method :get"))
