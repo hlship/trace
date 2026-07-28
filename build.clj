@@ -3,7 +3,7 @@
             [clojure.tools.build.api :as build]))
 
 (def lib 'io.github.hlship/trace)
-(def version "1.4")
+(def version "1.5")
 
 (def jar-params {:project-name lib
                  :version version

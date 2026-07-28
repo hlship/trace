@@ -4,3 +4,5 @@
 !.clj-kondo/config.edn
 .clj-kondo/**
 *.iml
+.idea
+.nrepl-port
